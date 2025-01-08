@@ -2,10 +2,13 @@ import numpy as np
 from scipy.fftpack import fft, ifft
 from scipy.ndimage.interpolation import shift
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
-from src import utils as ut
-
+def get_max(data: Union[list, np.ndarray]) -> Tuple[Union[float, int], int]:
+    if isinstance(data, list):
+        data = np.array(data)
+    maxind = np.nanargmax(data)
+    return data[maxind], maxind
 
 def crosscorr(x: np.ndarray, y: np.ndarray, max_shift: Optional[int], scale: bool = False) -> np.ndarray:
     # https://dsp.stackexchange.com/questions/736/how-do-i-implement-cross-correlation-to-prove-two-audio-files-are-similar
@@ -47,9 +50,9 @@ def finddelay(x: np.ndarray, y: np.ndarray, method="fft") -> Tuple[int, float]:
     else:
         corr_normalized = abs(crosscorr(x, y, max_shift)) / np.sqrt(sumxx * sumyy)  # for normalization
     # find max lags on right side, negative delays
-    max_right_lag, index_max_right = ut.get_max(corr_normalized[max_shift:])
+    max_right_lag, index_max_right = get_max(corr_normalized[max_shift:])
     # find max lags on left side, positive delays
-    max_left_lag, index_max_left = ut.get_max(np.flipud(corr_normalized[:max_shift]))
+    max_left_lag, index_max_left = get_max(np.flipud(corr_normalized[:max_shift]))
     if max_left_lag == 0:  # if zero
         index_max = max_shift + index_max_right + 1
     else:
